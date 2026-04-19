@@ -1,0 +1,89 @@
+const fs   = require('fs');
+const path = require('path');
+const { SYSTEM_TZ } = require('./constants');
+const { catTypeLine, delay } = require('./terminal');
+const { pad2 } = require('./utils');
+
+let _outputLine_ref = null;
+
+function getLocalHour(isoTimestamp) {
+  const date         = new Date(isoTimestamp);
+  const localHourStr = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric', hour12: false, timeZone: SYSTEM_TZ,
+  }).format(date);
+  return parseInt(localHourStr, 10) % 24;
+}
+
+function buildHeatmap(messages) {
+  const buckets = Array.from({ length: 12 }, (_, i) => ({
+    startHour: i * 2,
+    endHour:   i * 2 + 1,
+    label:     pad2(i * 2) + ':00 – ' + pad2(i * 2 + 1) + ':59',
+    count:     0,
+  }));
+  for (const msg of messages) {
+    if (!msg.timestamp) continue;
+    const hour = getLocalHour(msg.timestamp);
+    const idx  = Math.floor(hour / 2);
+    if (idx >= 0 && idx < 12) buckets[idx].count++;
+  }
+  return buckets.sort((a, b) => b.count - a.count);
+}
+
+function makeBar(count, max) {
+  const BAR_WIDTH = 28;
+  const filled    = max === 0 ? 0 : Math.round((count / max) * BAR_WIDTH);
+  return '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled);
+}
+
+async function printAndSaveHeatmap(messages, outDir, username) {
+  if (!messages || messages.length === 0) return;
+
+  const sorted   = buildHeatmap(messages);
+  const top5     = sorted.slice(0, 5);
+  const maxCount = top5[0] ? top5[0].count : 0;
+
+  await catTypeLine('  ━━  HEATMAP  (' + SYSTEM_TZ + ', 2-hour windows)  ━━', { charDelay: 8 });
+
+  for (let i = 0; i < top5.length; i++) {
+    const b   = top5[i];
+    const bar = makeBar(b.count, maxCount);
+    const row = '  #' + (i + 1) + '  ' + b.label + '  │' + bar + '│  ' + String(b.count).padStart(4) + ' msg(s)';
+    await catTypeLine(row, { charDelay: 6 });
+    await delay(30);
+  }
+
+  const allSorted = buildHeatmap(messages);
+  const fullTop5  = allSorted.slice(0, 5);
+  const fileMax   = fullTop5[0] ? fullTop5[0].count : 0;
+
+  let txt = 'DISCORD OSINT — ACTIVITY HEATMAP\n' + '═'.repeat(64) + '\n\n';
+  txt += '  User      : ' + username + '\n';
+  txt += '  Timezone  : ' + SYSTEM_TZ + '\n';
+  txt += '  Window    : 2-hour buckets\n';
+  txt += '  Total msgs: ' + messages.length + '\n\n';
+  txt += '═'.repeat(64) + '\n\n';
+  txt += '  TOP 5 PEAK WINDOWS\n  ' + '─'.repeat(60) + '\n\n';
+
+  for (let i = 0; i < fullTop5.length; i++) {
+    const b   = fullTop5[i];
+    const bar = makeBar(b.count, fileMax);
+    txt += '  #' + (i + 1) + '  ' + b.label + '\n';
+    txt += '       │' + bar + '│  ' + b.count + ' msg(s)\n\n';
+  }
+
+  txt += '═'.repeat(64) + '\n\n';
+  txt += '  ALL WINDOWS\n  ' + '─'.repeat(60) + '\n\n';
+
+  const byHour = [...allSorted].sort((a, b) => a.startHour - b.startHour);
+  const allMax = byHour.reduce((m, b) => Math.max(m, b.count), 0);
+  for (const b of byHour) {
+    const bar = makeBar(b.count, allMax);
+    txt += '  ' + b.label + '  │' + bar + '│  ' + String(b.count).padStart(4) + ' msg(s)\n';
+  }
+  txt += '\n' + '═'.repeat(64) + '\n';
+
+  fs.writeFileSync(path.join(outDir, 'heatmap.txt'), txt);
+}
+
+module.exports = { printAndSaveHeatmap };
