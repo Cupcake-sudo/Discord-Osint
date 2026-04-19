@@ -73,7 +73,7 @@ Output will be large and takes longer depending on how active the user is. Bette
 
 ## Examples
 
-https://ibb.co/csWzgY3
+https://i.ibb.co/RJXLvjb/260419-23h44m18s-screenshot.png
 
 ```bash
 # Gather all messages
