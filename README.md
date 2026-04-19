@@ -1,7 +1,7 @@
-# Discord OSINT
+# Discord OSINT Nyx-Tool 
 **By Cupcake — v2.0**
 
-A command-line tool that searches shared Discord servers for messages, files, and mentions tied to a specific user ID.
+A command-line tool that searches shared Discord servers for messages, files, and mentions tied to a specific user ID. Based around a kitty named Nyx that tell you everything that is happening.
 
 ---
 
@@ -72,6 +72,8 @@ Output will be large and takes longer depending on how active the user is. Bette
 ---
 
 ## Examples
+
+https://ibb.co/csWzgY3
 
 ```bash
 # Gather all messages
