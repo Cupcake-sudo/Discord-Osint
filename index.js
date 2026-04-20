@@ -1,5 +1,4 @@
-
-<const fs   = require('fs');
+const fs   = require('fs');
 const path = require('path');
 
 const {
@@ -184,5 +183,4 @@ main().catch((err) => {
   stopHeader();
   console.error('\n  ✗  fatal error: ' + err.message);
   process.exit(1);
-});>
-
+});
