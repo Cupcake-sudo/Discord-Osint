@@ -185,39 +185,33 @@ async function printResults(rows, folderPath) {
   await catTypeLine('  ✓  Folder  →  ' + folderPath, { charDelay: 18 });
   _outputLine++;
 }
-
 async function printBanner() {
   const bannerLines = [
-'      _   _  __   __  _  _  ',
-'     | \\ | | \\ \\ / / \\ \\/ / ',
-'     |  \\| |  \\ V /   >  <  ',
-'     | |\\  |   | |   / /\\ \\ ',
-'     |_| \\_|   |_|  /_/  \\_\\',
+'▐ ▄  ▄· ▄▌▐▄• ▄                                             ',
+'•█▌▐█▐█▪██▌ █▌█▌▪                                            ',
+'▐█▐▐▌▐█▌▐█▪ ·██·                                             ',
+'██▐█▌ ▐█▀·.▪▐█·█▌                                            ',
+'▀▀ █▪  ▀ • •▀▀ ▀▀                                            ',
+'·▄▄▄▄  ▪  .▄▄ ·  ▄▄·       ▄▄▄  ·▄▄▄▄  ▄▄▄▄▄            ▄▄▌  ',
+'██▪ ██ ██ ▐█ ▀. ▐█ ▌▪▪     ▀▄ █·██▪ ██ •██  ▪     ▪     ██•  ',
+'▐█· ▐█▌▐█·▄▀▀▀█▄██ ▄▄ ▄█▀▄ ▐▀▀▄ ▐█· ▐█▌ ▐█.▪ ▄█▀▄  ▄█▀▄ ██▪  ',
+'██. ██ ▐█▌▐█▄▪▐█▐███▌▐█▌.▐▌▐█•█▌██. ██  ▐█▌·▐█▌.▐▌▐█▌.▐▌▐█▌▐▌',
+'▀▀▀▀▀• ▀▀▀ ▀▀▀▀ ·▀▀▀  ▀█▄▀▪.▀  ▀▀▀▀▀▀•  ▀▀▀  ▀█▄▀▪ ▀█▄▀▪.▀▀▀  ',
 '',
-'  ____  _________ __________  ____  ____ ',
-' / __ \\/  _/ ___// ____/ __ \\/ __ \\/ __ \\',
-'/ / / // / \\__ \\/ /   / / / / /_/ / / / /',
-'/_____/___//____/\\____/\\____/_/ |_/_____/',
-'',
-'        ____  _____ _____   ________',
-'       / __ \\/ ___//  _/ | / /_  __/',
-'      / / / /\\__ \\ / //  |/ / / /   ',
-'     / /_/ /___/ // // /|  / / /    ',
-'     \\____//____/___/_/ |_/ /_/  v2.1  !By Cupcake',
+'v2.1  !By Cupcake',
   ];
 
-  const cols     = process.stdout.columns || 80;
-  // bloated len
+  const cols     = process.stdout.columns || 120;
   const maxLen   = bannerLines.reduce((m, l) => Math.max(m, l.trimEnd().length), 0);
   const boxWidth = Math.min(maxLen + 4, cols - 4);
 
-  await typeLine('  ╭' + '─'.repeat(boxWidth) + '╮', { charDelay: 2 });
+  await typeLine('  ╭' + '─'.repeat(boxWidth) + '╮', { charDelay: 1 });
 
   for (const line of bannerLines) {
     if (line === '') {
       await typeLine('  │' + ' '.repeat(boxWidth) + '│', { charDelay: 0 });
     } else {
-      const trimmed    = line.trimEnd(); // ✅ measure the visible content only
+      const trimmed    = line.trimEnd();
       const innerWidth = boxWidth - 2;
       const totalPad   = Math.max(0, innerWidth - trimmed.length);
       const leftPad    = Math.floor(totalPad / 2);
@@ -229,7 +223,7 @@ async function printBanner() {
 
   await typeLine('  ╰' + '─'.repeat(boxWidth) + '╯', { charDelay: 2 });
   _outputLine++;
-  await glitchType('~ sniffing discord', { charDelay: 4, glitches: 4 });
+  await glitchType('~ sniffing discord ~', { charDelay: 4, glitches: 4 });
   lockCatBelowBanner();
 }
 
@@ -264,7 +258,7 @@ async function promptToken() {
     process.stdout.write(SAVE_CURSOR);
     process.stdout.write(moveCursor(_outputLine, 1));
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    rl.question('  » Input |Token| for servers : ', (answer) => {
+    rl.question('  » Input |Token| : ', (answer) => {
       rl.close();
       resolve(answer.trim());
     });
