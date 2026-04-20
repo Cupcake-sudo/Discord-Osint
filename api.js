@@ -56,7 +56,25 @@ async function discordAPI(apiPath) {
     return discordAPI(apiPath);
   }
 
-  return res.json();
+  // Guard against non-JSON responses (Cloudflare HTML error pages, etc.)
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const body = await res.text();
+    statusLog('  ✗  unexpected response (HTTP ' + res.status + ') — skipping this request');
+    statusLog('     hint: ' + body.slice(0, 120).replace(/[\r\n]+/g, ' ').trim() + '...');
+    // Return a fake Discord error object so callers can check data.code and skip gracefully
+    return { code: res.status, message: 'non-JSON response (HTTP ' + res.status + ')' };
+  }
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (err) {
+    statusLog('  ✗  JSON parse failed for ' + apiPath + ' — skipping');
+    return { code: -1, message: 'JSON parse error: ' + err.message };
+  }
+
+  return json;
 }
 
 async function tryResolveFromAPI(userId) {
