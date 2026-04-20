@@ -9,7 +9,8 @@ const {
 
 const {
   clearScreen, statusSet, statusLog, stopHeader, finalizeOutput,
-  printBanner, promptToken, printResults, catTypeLine, setCatMood, delay,
+  printBanner, promptToken, printResults, catTypeLine, setCatMood,
+  serverLogStart, serverLogUpdate, serverLogDone, delay,
 } = require('./terminal');
 
 const { sanitizeName, modeLabel, stripEmoji } = require('./utils');
@@ -24,12 +25,24 @@ const {
 
 function formatElapsed(ms) {
   const totalSeconds = ms / 1000;
-  if (totalSeconds < 60) {
-    return totalSeconds.toFixed(1) + 's';
-  }
+  if (totalSeconds < 60) return totalSeconds.toFixed(1) + 's';
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = (totalSeconds % 60).toFixed(0).padStart(2, '0');
   return minutes + 'm ' + seconds + 's';
+}
+
+function modeDisplay() {
+  if (MODE_ALL)      return 'All' + (MODE_HEATMAP ? ' + Heatmap' : '');
+  if (MODE_MESSAGES) return 'Messages' + (MODE_HEATMAP ? ' + Heatmap' : '');
+  if (MODE_FILES)    return 'Files' + (MODE_HEATMAP ? ' + Heatmap' : '');
+  if (MODE_MENTION)  return 'Mentions';
+  return 'All' + (MODE_HEATMAP ? ' + Heatmap' : '');
+}
+
+function unitFor() {
+  if (MODE_MENTION)  return 'mentions';
+  if (FILES_ONLY_MODE) return 'files';
+  return 'msgs';
 }
 
 async function main() {
@@ -42,11 +55,6 @@ async function main() {
   setToken(token);
   statusLog('');
   setCatMood('hunting');
-
-  statusLog('  Target ID  →  ' + TARGET_USER_ID);
-  statusLog('  Mode       →  ' + modeLabel() + (MODE_HEATMAP ? '  +heatmap' : ''));
-  statusLog('  Started    →  ' + new Date().toISOString());
-  statusLog('');
 
   statusSet('fetching your server list...');
   const guilds = await discordAPI('/users/@me/guilds');
@@ -70,6 +78,8 @@ async function main() {
   const allMessages = [];
   const allMentions = [];
   const summary     = [];
+  const mode        = modeDisplay();
+  const unit        = unitFor();
 
   statusLog('');
 
@@ -77,44 +87,42 @@ async function main() {
 
   for (const guild of guilds) {
     const name = stripEmoji(guild.name) || guild.id;
-    statusLog('  ▸  ' + name);
+    serverLogStart(mode, name, unit);
 
     if (MENTION_ONLY_MODE) {
       const mentions = await searchGuildForMentions(guild.id, guild.name, (username) => {
         if (!resolvedUsername) {
           resolvedUsername = username;
-          statusLog('');
           statusLog('  ✓  target identified: ' + resolvedUsername);
         }
-      });
+      }, (count) => serverLogUpdate(count));
       allMentions.push(...mentions);
       summary.push({ server: name, count: mentions.length, files: [], mentions: mentions.length });
-      if (mentions.length > 0) statusLog('');
+      serverLogUpdate(mentions.length);
     } else {
       let msgs;
       if (FILES_ONLY_MODE) {
         msgs = await searchGuildForFiles(guild.id, guild.name, tmpDir, (username) => {
           if (!resolvedUsername) {
             resolvedUsername = username;
-            statusLog('');
             statusLog('  ✓  target identified: ' + resolvedUsername);
           }
-        });
+        }, (count) => serverLogUpdate(count));
       } else {
         msgs = await searchGuildForUser(guild.id, guild.name, tmpDir, (username) => {
           if (!resolvedUsername) {
             resolvedUsername = username;
-            statusLog('');
             statusLog('  ✓  target identified: ' + resolvedUsername);
           }
-        });
+        }, (count) => serverLogUpdate(count));
       }
       const allFiles = msgs.flatMap((m) => m.files || []);
       allMessages.push(...msgs);
       summary.push({ server: name, count: msgs.length, files: allFiles, mentions: 0 });
-      if (msgs.length > 0) statusLog('');
+      serverLogUpdate(FILES_ONLY_MODE ? allFiles.length : msgs.length);
     }
 
+    serverLogDone();
     statusSet('padding softly to the next server...');
     await delay(SEARCH_DELAY_MS);
   }

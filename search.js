@@ -4,10 +4,9 @@ const { discordAPI } = require('./api');
 const { downloadFile } = require('./fileHandler');
 const { stripEmoji, formatUserTag, extractUsernameFromMessage, extractFileUrls } = require('./utils');
 
-// Lazy getter — avoids loading terminal before it's ready in circular-dep scenarios
 function setCatMood(mood) { require('./terminal').setCatMood(mood); }
 
-async function searchGuildForMentions(guildId, guildName, onTargetResolved) {
+async function searchGuildForMentions(guildId, guildName, onTargetResolved, onProgress) {
   let targetResolved = false;
   const collected    = [];
   let offset         = 0;
@@ -35,8 +34,7 @@ async function searchGuildForMentions(guildId, guildName, onTargetResolved) {
 
     if (total === null) {
       total = data.total_results || 0;
-      if (total === 0) { statusLog('  ·  not a single ping here. moving on...'); break; }
-      statusLog('  ✓  caught ' + total + ' mention(s) — listening closely...');
+      if (total === 0) break;
     }
 
     const messages = (data.messages || []).map((g) => g[0]).filter(Boolean);
@@ -68,6 +66,7 @@ async function searchGuildForMentions(guildId, guildName, onTargetResolved) {
     }
 
     offset += messages.length;
+    if (onProgress) onProgress(collected.length);
     if (offset >= total || messages.length === 0) break;
 
     setCatMood('sleepy');
@@ -79,7 +78,7 @@ async function searchGuildForMentions(guildId, guildName, onTargetResolved) {
   return collected;
 }
 
-async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor) {
+async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor, onProgress) {
   const collected = [];
   const seenIds   = new Set();
   let authorSent  = false;
@@ -110,8 +109,7 @@ async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor) 
 
     if (total === null) {
       total = data.total_results || 0;
-      if (total === 0) { statusLog('  ·  nothing to nibble here...'); break; }
-      statusLog('  ✓  spotted ' + total + ' message(s) with files — nom time');
+      if (total === 0) break;
     }
 
     const messages = (data.messages || []).map((g) => g[0]).filter(Boolean);
@@ -142,6 +140,8 @@ async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor) 
     }
 
     offset += messages.length;
+    const totalFiles = collected.reduce((n, m) => n + m.files.length, 0);
+    if (onProgress) onProgress(totalFiles);
     if (offset >= total || messages.length === 0) break;
 
     setCatMood('sleepy');
@@ -153,7 +153,7 @@ async function searchGuildForFiles(guildId, guildName, filesDir, onFirstAuthor) 
   return collected;
 }
 
-async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor) {
+async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor, onProgress) {
   const collected = [];
   let offset      = 0;
   let total       = null;
@@ -180,7 +180,6 @@ async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor) {
     if (total === null) {
       total = data.total_results || 0;
       if (total === 0) break;
-      statusLog('  ✓  found ' + total + ' message(s) — digging in...');
     }
 
     const messages = (data.messages || []).map((g) => g[0]).filter(Boolean);
@@ -226,6 +225,7 @@ async function searchGuildForUser(guildId, guildName, filesDir, onFirstAuthor) {
     }
 
     offset += messages.length;
+    if (onProgress) onProgress(collected.length);
     if (offset >= total || messages.length === 0) break;
 
     setCatMood('sleepy');
