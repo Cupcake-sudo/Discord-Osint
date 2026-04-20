@@ -36,7 +36,8 @@ Shows which users tag the target the most.
 
 `-files` collects only files. `-heatmap` shows the time windows where most messages are sent.
 
-<img width="980" height="922" alt="Collecting Files screenshot" src="https://github.com/user-attachments/assets/41d8c19e-ff8b-49ca-b569-4dedc788d96f" />
+<img width="1391" height="694" alt="asdads" src="https://github.com/user-attachments/assets/d73a9688-9321-4ee3-8fc4-2f6ad4756f33" />
+
 
 -----
 
