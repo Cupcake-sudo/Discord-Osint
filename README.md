@@ -3,6 +3,17 @@
 
 A command-line tool that searches shared Discord servers for messages, files, and mentions tied to a specific user ID. Based around a kitty named Nyx that tell you everything that is happening.
 
+#Sniffing Mentions **(shows what users most tag the target)**
+
+<img width="898" height="711" alt="260419_23h44m18s_screenshot" src="https://github.com/user-attachments/assets/68a9c656-9b18-4362-b3bc-e4223dd23441" />
+
+#Collecting Files **-files (collects only files) -heatmap (shows the time where most messages are sent)**
+
+<img width="980" height="922" alt="eg" src="https://github.com/user-attachments/assets/609ec039-7ebb-4ce8-9410-27354bf7da55" />
+
+
+
+
 ---
 
 ## Requirements
@@ -72,8 +83,6 @@ Output will be large and takes longer depending on how active the user is. Bette
 ---
 
 ## Examples
-
-<img width="898" height="711" alt="260419_23h44m18s_screenshot" src="https://github.com/user-attachments/assets/68a9c656-9b18-4362-b3bc-e4223dd23441" />
 
 
 ```bash
